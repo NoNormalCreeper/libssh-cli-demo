@@ -25,32 +25,16 @@ cargo run -- myserver.example
 
 ## Usage
 
-```bash
-$ cargo run -- --help
+```
+$ cargo run -- -h
 
-Usage: myssh [user@]host [-p PORT] [-i KEY] [-- COMMAND...]
+libssh-cli-demo - minimal SSH client built on libssh via FFI
 
-Usage: libssh-cli-demo [OPTIONS] <DESTINATION> [-- <COMMAND>...]
-
-Arguments:
-  <DESTINATION>
-          Target in the form `[user@]host`
-
-  [COMMAND]...
-          Command to execute on the remote host. Separate with `--`, e.g.: myssh user@host -- ls -la
+Usage: libssh-cli-demo [user@]host [-p port] [-i keyfile] [-- command ...]
 
 Options:
-  -p, --port <PORT>
-          Remote port (default: 22)
-          
-          [default: 22]
-
-  -i, --identity <FILE>
-          Path to a private key file (default: SSH agent / ~/.ssh/id_*)
-
-  -h, --help
-          Print help (see a summary with '-h')
-
-  -V, --version
-          Print version
+  -p PORT    Remote port (default: 22)
+  -i FILE    Path to private key file
+  -h         Print this help message
+  -V         Print version
 ```
