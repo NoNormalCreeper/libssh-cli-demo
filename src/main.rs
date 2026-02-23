@@ -5,13 +5,12 @@ mod channel;
 
 use std::process;
 
-use clap::Parser;
 use cli::{Cli, Destination};
 use session::SshSession;
 use channel::SshChannel;
 
 fn run() -> anyhow::Result<i32> {
-    let args = Cli::parse();
+    let args = Cli::parse()?;
 
     // Parse `[user@]host`
     let dest = Destination::parse(&args.destination)?;

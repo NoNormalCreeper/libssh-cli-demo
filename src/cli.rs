@@ -1,31 +1,77 @@
-use clap::Parser;
+use lexopt::prelude::*;
 
-/// A minimal SSH client powered by libssh FFI.
-///
-/// Usage:
-///   myssh [user@]host [-p PORT] [-i KEY] [-- COMMAND...]
-#[derive(Parser, Debug)]
-#[command(
-    name    = "myssh",
-    about   = "Minimal SSH client built on top of libssh via FFI",
-    version
-)]
 pub struct Cli {
-    /// Target in the form `[user@]host`
     pub destination: String,
-
-    /// Remote port (default: 22)
-    #[arg(short, long, default_value_t = 22)]
     pub port: u16,
-
-    /// Path to a private key file (default: SSH agent / ~/.ssh/id_*)
-    #[arg(short, long, value_name = "FILE")]
     pub identity: Option<String>,
-
-    /// Command to execute on the remote host.
-    /// Separate with `--`, e.g.: myssh user@host -- ls -la
-    #[arg(last = true)]
     pub command: Vec<String>,
+}
+
+impl Cli {
+    pub fn parse() -> anyhow::Result<Self> {
+        let mut parser = lexopt::Parser::from_env();
+
+        let mut destination: Option<String> = None;
+        let mut port: u16 = 22;
+        let mut identity: Option<String> = None;
+        let mut command: Vec<String> = Vec::new();
+
+        while let Some(arg) = parser.next()? {
+            match arg {
+                Short('p') => {
+                    port = parser.value()?.parse()?;
+                }
+                Short('i') => {
+                    identity = Some(parser.value()?.string()?);
+                }
+                Short('h') | Long("help") => {
+                    print_help();
+                    std::process::exit(0);
+                }
+                Short('V') | Long("version") => {
+                    print_version();
+                    std::process::exit(0);
+                }
+                Value(val) if destination.is_none() => {
+                    destination = Some(val.string()?);
+                }
+                Value(val) => {
+                    command.push(val.string()?);
+                }
+                _ => return Err(arg.unexpected().into()),
+            }
+        }
+
+        let destination = destination.ok_or_else(|| {
+            anyhow::anyhow!(
+                "missing required argument: destination\n\n\
+                 Usage: {} [user@]host [-p port] [-i keyfile] [-- command ...]",
+                env!("CARGO_PKG_NAME"),
+            )
+        })?;
+
+        Ok(Self { destination, port, identity, command })
+    }
+}
+
+fn print_help() {
+    let bin = env!("CARGO_PKG_NAME");
+    println!(
+        "\
+{bin} - minimal SSH client built on libssh via FFI
+
+Usage: {bin} [user@]host [-p port] [-i keyfile] [-- command ...]
+
+Options:
+  -p PORT    Remote port (default: 22)
+  -i FILE    Path to private key file
+  -h         Print this help message
+  -V         Print version"
+    );
+}
+
+fn print_version() {
+    println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 }
 
 /// Parsed components of a `[user@]host` string.
